@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:4.4
+    networks:
+      - orion_network
+    command: --nojournal
+    volumes:
+      - mongodb_data:/data/db
+
+  orion:
+    image: fiware/orion:3.7.0
+    networks:
+      - orion_network
+    depends_on:
+      - mongodb
+    ports:
+      - "1026:1026"
+    command: -dbhost mongodb -logLevel DEBUG
+    healthcheck:
+      test: curl --fail -s http://localhost:1026/version || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  orion_network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
